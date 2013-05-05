@@ -175,6 +175,10 @@ if %day% equ 0 (
     )
 )
 
+if %day% lss 10 (
+    set day=0%day%
+)
+
 if not exist "%src%\%year%%month%%day%\*.*" goto DayNotFound
 
 :NightlyFilter
