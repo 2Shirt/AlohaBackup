@@ -44,9 +44,12 @@ set year=%date:~10,4%
 
 :FindAloha
 for %%d in (c d e f g h i j k l m n o p q r s t u v w x y z) do (
-    if exist "%%d:\AlohaQS\*.*" (
-        set src=%%d:\AlohaQS
-        goto FindSevenZip
+    dir %%d:>nul 2>nul
+    if "!errorlevel!" equ "0" (
+        if exist "%%d:\AlohaQS\*.*" (
+            set src=%%d:\AlohaQS
+            goto FindSevenZip
+        )
     )
 )
 rem Not found
@@ -241,9 +244,12 @@ cd /d "%src%"
 
 :CopyBackup
 for %%d in (c d e f g h i j k l m n o p q r s t u v w x y z) do (
-    if exist "%%d:\%backup%\*.*" (
-        mkdir "%%d:\%backup%\%subdir%" 2>nul
-        copy "%tmp%\%filename%" "%%d:\%backup%\%subdir%\%filename%" /y
+    dir %%d:>nul 2>nul
+    if "!errorlevel!" equ "0" (
+        if exist "%%d:\%backup%\*.*" (
+            mkdir "%%d:\%backup%\%subdir%" 2>nul
+            copy "%tmp%\%filename%" "%%d:\%backup%\%subdir%\%filename%" /y
+        )
     )
 )
 
@@ -292,4 +298,6 @@ echo Press any key to exit...
 pause>nul
 
 :Done
+popd
+endlocal
 color
