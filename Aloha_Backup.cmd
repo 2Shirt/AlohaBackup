@@ -26,12 +26,11 @@ echo     This program comes with ABSOLUTELY NO WARRANTY.
 echo     This is free software, and you are welcome to redistribute it
 echo     under certain conditions; see COPYING.txt for details.
 
-:DEBUG
-if "%2" == "/DEBUG" (
-    @echo on
-)
-if "%3" == "/DEBUG" (
-    @echo on
+:Flags
+set silent=
+for %%f in (%*) do (
+    if /i "%%f" == "/DEBUG" (@echo on)
+    if /i "%%f" == "/S" (set silent=True)
 )
 
 :SetVariables
@@ -60,7 +59,7 @@ if exist "7za\7za.exe" (set sevenzip=%pd%\7za\7za.exe)
 if exist "%PROGRAMFILES%\7-Zip\7z.exe" (set sevenzip=%PROGRAMFILES%\7-Zip\7z.exe)
 if not defined sevenzip goto SevenZipNotFound
 
-:ParseArguments
+:GetMode
 if /i "%1" == "nightly" goto Nightly
 if /i "%1" == "weekly" goto Weekly
 if /i "%1" == "monthly" goto Monthly
@@ -72,7 +71,7 @@ goto Usage
 :Full
 title Aloha - Full Backup
 rem Warn user
-if /i not "%2" == "/s" (
+if not defined silent (
     echo Aloha - Full Backup
     echo.
     echo This script will make a full backup of the Aloha System.
@@ -94,7 +93,7 @@ goto CompressBackup
 :Monthly
 title Aloha - Monthly Backup
 rem Warn user
-if /i not "%2" == "/s" (
+if not defined silent (
     echo Aloha - Monthly Backup
     echo.
     echo This script will make a backup of last month's data from the Aloha System.
@@ -127,7 +126,7 @@ goto CompressBackup
 :Nightly
 title Aloha - Nightly Backup
 rem Warn user
-if /i not "%2" == "/s" (
+if not defined silent (
     echo Aloha - Nightly Backup
     echo.
     echo This script will make a backup of yesterdays's data from the Aloha System.
@@ -194,7 +193,7 @@ goto CompressBackup
 :Weekly
 title Aloha - Weekly Backup
 rem Warn user
-if /i not "%2" == "/s" (
+if not defined silent (
     echo Aloha - Weekly Backup
     echo.
     echo This script will make a backup of the Aloha System program files.
@@ -217,7 +216,7 @@ goto CompressBackup
 :Yearly
 title Aloha - Yearly Backup
 rem Warn user
-if /i not "%2" == "/s" (
+if not defined silent (
     echo Aloha - Yearly Backup
     echo.
     echo This script will make a backup of last year's data from the Aloha System.
@@ -292,7 +291,7 @@ echo /s     Suppress warnings
 goto End
 
 :End
-if /i "%2" == "/s" goto Done
+if defined silent goto Done
 echo.
 echo Press any key to exit... 
 pause>nul
