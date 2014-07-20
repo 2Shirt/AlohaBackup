@@ -253,8 +253,8 @@ for %%d in (c d e f g h i j k l m n o p q r s t u v w x y z) do (
 )
 
 :Cleanup
-del /q "%tmp%\%filename%">nul
-del /q "%tmp%\7z_switch">nul
+del /q "%tmp%\%filename%">nul 2>&1
+del /q "%tmp%\7z_switch">nul 2>&1
 goto End
 
 :AlohaNotFound
