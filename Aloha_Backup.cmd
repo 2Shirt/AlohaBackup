@@ -28,19 +28,10 @@ pushd %~dp0
 set silent=
 for %%f in (%*) do (
     if /i "%%f" == "/DEBUG" (@echo on)
-    if /i "%%f" == "/H" (goto Usage)
-    if /i "%%f" == "/HELP" (goto Usage)
+    if /i "%%f" == "/H" (set mode=Help)
+    if /i "%%f" == "/HELP" (set mode=Help)
     if /i "%%f" == "/S" (set silent=True)
 )
-
-: GetMode
-set mode=
-if /i "%1" == "nightly" (set mode=Nightly)
-if /i "%1" == "monthly" (set mode=Monthly)
-if /i "%1" == "yearly" (set mode=Yearly)
-if /i "%1" == "program" (set mode=Program)
-if /i "%1" == "full" (set mode=Full)
-if not defined mode (goto Usage)
 
 :GPLStuff
 if not defined silent (
@@ -50,6 +41,16 @@ if not defined silent (
     echo     under certain conditions; see COPYING.txt for details.
     echo.
 )
+
+: GetMode
+if /i "%mode%" == "Help" (goto Usage)
+set mode=
+if /i "%1" == "nightly" (set mode=Nightly)
+if /i "%1" == "monthly" (set mode=Monthly)
+if /i "%1" == "yearly" (set mode=Yearly)
+if /i "%1" == "program" (set mode=Program)
+if /i "%1" == "full" (set mode=Full)
+if not defined mode (goto Usage)
 
 :SetVariables
 pushd %~dp0
