@@ -14,7 +14,7 @@ There are five types of backups that this script can perform:
 		Contents:	Everything but the "YYYYMMDD" folders.
 		Name:		YYYY_MM_DD.7z
 	Yearly:
-		Contents:	All "YYYYMMDD" folders from a year (determined by the filename).
+		Contents:	All "YYYYMMDD" folders from the previous year.
 		Name:		YYYY.7z
 *   All backups are compressed with 7-Zip to save space. Backups are less than 20% original size!
 **  All filenames refer to the dates contained in the backup except the Full and Program backups; those refer to when the backup was done.
@@ -36,7 +36,7 @@ Usage:
 
     Options:
       /h /help     Show this screen.
-      /s           Silent ^(Suppress messages^).
+      /s           Silent (Suppress messages).
 
     Modes:
       Nightly     Backup yesterday
