@@ -1,42 +1,61 @@
 :: Aloha Backup
-:: Copyright 2013 Alan Mason
+:: Copyright 2014 Alan Mason
 :: 
-:: This program is free software: you can redistribute it and/or modify
-:: it under the terms of the GNU General Public License as published by
-:: the Free Software Foundation, either version 3 of the License, or
-:: (at your option) any later version.
+:: This file is part of Aloha Backup.
 :: 
-:: This program is distributed in the hope that it will be useful,
-:: but WITHOUT ANY WARRANTY; without even the implied warranty of
-:: MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-:: GNU General Public License for more details.
+::  Aloha Backup is free software: you can redistribute it and/or modify
+::  it under the terms of the GNU General Public License as published by
+::  the Free Software Foundation, either version 3 of the License, or
+::  (at your option) any later version.
 :: 
-:: You should have received a copy of the GNU General Public License
-:: along with this program.  If not, see <http://www.gnu.org/licenses/>.
+::  Aloha Backup is distributed in the hope that it will be useful,
+::  but WITHOUT ANY WARRANTY; without even the implied warranty of
+::  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+::  GNU General Public License for more details.
+:: 
+::  You should have received a copy of the GNU General Public License
+::  along with Aloha Backup.  If not, see <http://www.gnu.org/licenses/>.
 
 @echo off
-Setlocal EnableDelayedExpansion
 
-:GPLStuff
-cls
-title Aloha - Backup
+:Init
+setlocal EnableDelayedExpansion
+title Aloha Backup
 color 1b
-echo Aloha Backup  Copyright (C) 2013  Alan Mason
-echo     This program comes with ABSOLUTELY NO WARRANTY.
-echo     This is free software, and you are welcome to redistribute it
-echo     under certain conditions; see COPYING.txt for details.
+pushd %~dp0
 
 :Flags
 set silent=
 for %%f in (%*) do (
     if /i "%%f" == "/DEBUG" (@echo on)
+    if /i "%%f" == "/H" (goto Usage)
+    if /i "%%f" == "/HELP" (goto Usage)
     if /i "%%f" == "/S" (set silent=True)
+)
+
+: GetMode
+set mode=
+if /i "%1" == "nightly" (set mode=Nightly)
+if /i "%1" == "monthly" (set mode=Monthly)
+if /i "%1" == "yearly" (set mode=Yearly)
+if /i "%1" == "program" (set mode=Program)
+if /i "%1" == "full" (set mode=Full)
+if not defined mode (goto Usage)
+
+:GPLStuff
+if not defined silent (
+    echo Aloha Backup  Copyright ^(C^) 2014  Alan Mason
+    echo     This program comes with ABSOLUTELY NO WARRANTY.
+    echo     This is free software, and you are welcome to redistribute it
+    echo     under certain conditions; see COPYING.txt for details.
+    echo.
 )
 
 :SetVariables
 pushd %~dp0
 set pd=%cd%
 set backup=Aloha Backups
+set warnings=
 set month=%date:~4,2%
 set day=%date:~7,2%
 set year=%date:~10,4%
@@ -51,26 +70,19 @@ for %%d in (c d e f g h i j k l m n o p q r s t u v w x y z) do (
         )
     )
 )
-rem Not found
 goto AlohaNotFound
 
 :FindSevenZip
 if exist "7za\7za.exe" (set sevenzip=%pd%\7za\7za.exe)
 if exist "%PROGRAMFILES%\7-Zip\7z.exe" (set sevenzip=%PROGRAMFILES%\7-Zip\7z.exe)
+if exist "%PROGRAMFILES86%\7-Zip\7z.exe" (set sevenzip=%PROGRAMFILES86%\7-Zip\7z.exe)
 if not defined sevenzip goto SevenZipNotFound
 
-:GetMode
-if /i "%1" == "nightly" goto Nightly
-if /i "%1" == "weekly" goto Weekly
-if /i "%1" == "monthly" goto Monthly
-if /i "%1" == "yearly" goto Yearly
-if /i "%1" == "full" goto Full
-rem else
-goto Usage
+:Main
+goto %mode%Backup
 
-:Full
-title Aloha - Full Backup
-rem Warn user
+:FullBackup
+title Aloha Backup - Full Backup
 if not defined silent (
     echo Aloha - Full Backup
     echo.
@@ -84,15 +96,13 @@ if not defined silent (
     pause>nul
 )
 
-rem Set filter = " " (set but empty)
 set filter= 
 set filename=%year%_%month%_%day%.7z
 set subdir=Full Backups
 goto CompressBackup
 
-:Monthly
-title Aloha - Monthly Backup
-rem Warn user
+:MonthlyBackup
+title Aloha Backup - Monthly Backup
 if not defined silent (
     echo Aloha - Monthly Backup
     echo.
@@ -123,9 +133,8 @@ set filename=%year%_%month%.7z
 set subdir=Monthly Backups
 goto CompressBackup
 
-:Nightly
-title Aloha - Nightly Backup
-rem Warn user
+:NightlyBackup
+title Aloha Backup - Nightly Backup
 if not defined silent (
     echo Aloha - Nightly Backup
     echo.
@@ -161,19 +170,19 @@ if %month% lss 10 (
 if %day% equ 0 (
     if exist "%src%\%year%%month%31\*.*" (
         set day=31
-        goto NightlyFilter
+        goto NightlyBackupFilter
     )
     if exist "%src%\%year%%month%30\*.*" (
         set day=30
-        goto NightlyFilter
+        goto NightlyBackupFilter
     )
     if exist "%src%\%year%%month%29\*.*" (
         set day=29
-        goto NightlyFilter
+        goto NightlyBackupFilter
     )
     if exist "%src%\%year%%month%28\*.*" (
         set day=28
-        goto NightlyFilter
+        goto NightlyBackupFilter
     )
 )
 
@@ -183,18 +192,17 @@ if %day% lss 10 (
 
 if not exist "%src%\%year%%month%%day%\*.*" goto DayNotFound
 
-:NightlyFilter
+:NightlyBackupFilter
 rem Set filter = yesterday
 set filter=%year%%month%%day%
 set filename=%year%_%month%_%day%.7z
 set subdir=Nightly Backups
 goto CompressBackup
 
-:Weekly
-title Aloha - Weekly Backup
-rem Warn user
+:ProgramBackup
+title Aloha Backup - Program Backup
 if not defined silent (
-    echo Aloha - Weekly Backup
+    echo Aloha - Program Backup
     echo.
     echo This script will make a backup of the Aloha System program files.
     echo This should take only a few minutes to complete.
@@ -206,16 +214,15 @@ if not defined silent (
     pause>nul
 )
 
-rem Set filter = 7-Zip switch to exclude all transaction data
+rem Set filter to exclude all transaction data
 echo 20*> "%tmp%\7z_switch"
 set filter=-x^^@"%tmp%\7z_switch"
 set filename=%year%_%month%_%day%.7z
 set subdir=Program Backups
 goto CompressBackup
 
-:Yearly
-title Aloha - Yearly Backup
-rem Warn user
+:YearlyBackup
+title Aloha Backup - Yearly Backup
 if not defined silent (
     echo Aloha - Yearly Backup
     echo.
@@ -240,6 +247,10 @@ goto CompressBackup
 :CompressBackup
 cd /d "%src%"
 "%sevenzip%" a -t7z -mx=9 "%tmp%\%filename%" %filter%
+if %errorlevel% equ 255 (goto Abort)
+if %errorlevel% geq 2 (goto ErrorFatal)
+if %errorlevel% equ 1 (set warnings=True)
+goto CopyBackup
 
 :CopyBackup
 for %%d in (c d e f g h i j k l m n o p q r s t u v w x y z) do (
@@ -251,52 +262,86 @@ for %%d in (c d e f g h i j k l m n o p q r s t u v w x y z) do (
         )
     )
 )
+if defined warnings (goto SevenZipWarning)
+goto Done
 
-:Cleanup
-del /q "%tmp%\%filename%">nul 2>&1
-del /q "%tmp%\7z_switch">nul 2>&1
-goto End
+:Abort
+echo.
+echo Aborted.
+goto Exit
 
 :AlohaNotFound
-cls
 color 0c
-echo Aloha not found^^!
+echo.
+echo ERROR: AlohaQS not found.
 echo This backup script only works with the AlohaQS program.
-goto End
+set silent=
+goto Exit
 
 :DayNotFound
-cls
 color 0c
-echo No records found for date: %month%/%day%/%year%^^!
-echo Skipping nightly backup.
-goto End
+echo.
+echo ERROR: No records found for date: %month%/%day%/%year%.
+set silent=
+goto Exit
+
+:SevenZipFatalError
+color 0c
+echo.
+echo ERROR: %mode% Backup has failed.
+set silent=
+goto Exit
 
 :SevenZipNotFound
-cls
 color 0c
-echo 7-Zip not found^^!
+echo.
+echo ERROR: 7-Zip not found.
 echo Please install 7-Zip and then try again.
-goto End
+set silent=
+goto Exit
+
+:SevenZipWarning
+color 0c
+echo.
+echo WARNING: Some files were not backed up.
+echo     ^(Try rebooting and running a %mode% Backup again^).
+set silent=
+goto Exit
 
 :Usage
 echo.
-echo Usage: Aloha_Backup.cmd ^<mode^> ^(/s^)
+echo Usage:
+echo   Aloha_Backup.cmd mode [options]
+echo   Aloha_Backup.cmd /help
 echo.
-echo Modes: Nightly ^(Backup yesterday^)
-echo        Weekly  ^(Backup program files^)
-echo        Monthly ^(Backup last month^)
-echo        Yearly  ^(Backup last year^)
-echo        Full    ^(Backup everything^)
-echo /s     Suppress warnings
-goto End
-
-:End
-if defined silent goto Done
+echo Options:
+echo   /h /help     Show this screen.
+echo   /s           Silent ^(Suppress messages^).
 echo.
-echo Press any key to exit... 
-pause>nul
+echo Modes:
+echo    Nightly     Backup yesterday
+echo    Monthly     Backup last month
+echo    Yearly      Backup last year
+echo    Program     Backup program files
+echo    Full        Backup everything
+goto Done
 
 :Done
+echo.
+echo Done.
+goto Exit
+
+:Exit
+rem Cleanup
+del /q "%tmp%\%filename%">nul 2>&1
+del /q "%tmp%\7z_switch">nul 2>&1
+
+if not defined silent (
+    echo.
+    echo Press any key to exit...
+    pause>nul
+)
 popd
-endlocal
 color
+endlocal
+title %cd%
